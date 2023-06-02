@@ -1,28 +1,28 @@
-## WariCam
+# WariCam
 使用したライブラリ：
-#ultralytics 
+## ultralytics 
 皿などのオブジェクトデテクションのために使用
 pip:
 ```
 pip install ultralytics
 ```
-#pygame
+## pygame
 UIのために使用
 pip:
 ```
 pip install pygame
 ```
-#Opencv
+## Opencv
 オブジェクトデテクションの可視化のために使用
-pip:
+ pip:
 ```
 pip install opencv-python
 ```
-#mediapipe
+## mediapipe
 手のトラッキングのために使用
-pip:
+ pip:
 ```
-pip install mediapipe
+ pip install mediapipe
 ```
-#pythonのバージョンについて
+## pythonのバージョンについて
 Python 3.9.13 64-bitを使用
