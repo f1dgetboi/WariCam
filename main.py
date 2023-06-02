@@ -9,13 +9,15 @@ MONITOR_MIDDLE = (monitor_size[0] / 2,monitor_size[1] / 2)
 BACKGROUND_IMG = pygame.image.load("images/background.png")
 a = pygame.image.load("images/minus_sign.png")
 
+#変数の初期化
 people = 0
 children = 0
 y_offset = -50
 x_offset = 285
 current_stage = 0
 
-#define objects
+#オブジェクトのインスタンスを初期化
+
 background = GuiObject(1000,750,455,MONITOR_MIDDLE[1]-375,(255,255,255),texture=None,visible=True,stroke=False,stroke_width=5,stroke_color=(255,255,255),rounded=True,roundness=10)
 plus_button = Button(100,100,820 + x_offset,400+ y_offset,(220,220,220),texture="images/plus.png",visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=10,hollow=False,background=True)
 minus_button = Button(100,100,380 + x_offset,400+ y_offset,(220,220,220),texture="images/minus.png",visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=10,hollow=False,background=True)
@@ -25,13 +27,15 @@ c_minus_button = Button(100,100,380 + x_offset,650+ y_offset,(220,220,220),textu
 children_text = TextBox(300,100,500 + x_offset,650+ y_offset,(220,220,220),str(people),100,130,-30)
 continue_button = Button(400,110,750,750,(220,220,220),texture=None,visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=10,hollow=False,background=True,text="続行",fontsize=100,text_offset_y=-20,text_offset_x=100)
 
+#少しオブジェクトの値を変えている
 people_text.roundness = 10
 people_text.rounded = True
 children_text.roundness = 10
 children_text.rounded = True
 hoverd = False
 
-#draw functions
+#画面に描画する関数
+
 def draw_welcome():
     background.draw()
     plus_button.draw()
@@ -45,6 +49,7 @@ def draw_welcome():
     c_plus_button.draw()
     children_text.draw()
     continue_button.draw()
+
 def draw():
     print(current_stage)
     if current_stage == 0:
@@ -70,6 +75,40 @@ def handle_button():
     children_text.text = str(children)
     current_stage = continue_button.check_clicks(current_stage,1)
 
+#背景動作
+
+def pygame_background_functionts(testsubject=None,value_x=None,value_y=None):
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            if testsubject is not None:
+                with open('test.txt', 'w') as f:
+                    #f.write(f'Y is: {testsubject.y} X is: {testsubject.x} width is: {testsubject.w} height is: {testsubject.h}')
+                    f.write(f'Y is: {value_y} X is: {value_x} ')
+            pygame.quit()
+            sys.exit()
+        if event.type == KEYDOWN:
+            if testsubject is not None:
+                if event.key == K_DOWN:
+                    value_y += 1
+                    testsubject.y += 5
+                if event.key == K_UP:
+                    value_y -= 1
+                    testsubject.y -= 5
+                if event.key == K_RIGHT:
+                    value_x += 1
+                    testsubject.x += 5
+                if event.key == K_LEFT:
+                    value_x -= 1
+                    testsubject.x -= 5
+                if event.key == K_m:
+                    testsubject.w +=5
+                if event.key == K_n:
+                    testsubject.w -=5
+                if event.key == K_x:
+                    testsubject.h +=5
+                if event.key == K_c:
+                    testsubject.h -=5
+    pygame.display.update()
 
 def plate_detection():
     #global x1,y1,x2,y2,w,h

@@ -1,11 +1,13 @@
 import pygame, sys
 from pygame.locals import *
 import cv2
-#initialise everything here
+#initialise
 pygame.init()
 monitor_size = [pygame.display.Info().current_w, pygame.display.Info().current_h]
 mainClock = pygame.time.Clock()
 DEFAULT_FONT = r"C:\Users\akiso\Desktop\Gui\fonts\Zen_Old_Mincho\ZenOldMincho-Medium.ttf"
+
+#ウィンドウの作成
 
 def create_window(width, height,background_colour,caption):
     global screen, window_colour,WIDTH,HEIGHT
@@ -17,11 +19,13 @@ def create_window(width, height,background_colour,caption):
     screen.fill(background_colour)
     pygame.display.flip()
 
+#テキストの描画
 def create_text(font,fontsize,color,x,y,text):
     font = pygame.font.Font(font, fontsize)
     text = font.render(text, True, color)
     screen.blit(text, (x,y))
 
+#OPENCVのIMGをPYGAMEのIMGに転換
 def BGR_TO_RGB(img):
     rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     height, width, _ = rgb_img.shape
@@ -30,10 +34,12 @@ def BGR_TO_RGB(img):
 
     return pygame_image
 
+#写真の大きさを変える関数
 def resize_image(image, width, height):
     resized_image = pygame.transform.scale(image, (width, height))
     return resized_image
 
+#他はオブジェクトのコード
 class GuiObject:
     def __init__(self,w,h,x,y,color,texture=None,visible=True,stroke=False,stroke_width=5,stroke_color=(255,255,255),rounded=False,roundness=3,hollow=False,background=False):
         self.w = w
@@ -154,35 +160,4 @@ class TextBox():
                 pygame.draw.rect(screen, self.color,((self.x,self.y),(self.w, self.h)),int(self.hollow))
                 create_text(DEFAULT_FONT,self.fontsize,(0,0,0),self.x + self.text_offset_x,self.y + self.text_offset_y,self.text)
 
-def pygame_background_functionts(testsubject=None,value_x=None,value_y=None):
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            if testsubject is not None:
-                with open('test.txt', 'w') as f:
-                    #f.write(f'Y is: {testsubject.y} X is: {testsubject.x} width is: {testsubject.w} height is: {testsubject.h}')
-                    f.write(f'Y is: {value_y} X is: {value_x} ')
-            pygame.quit()
-            sys.exit()
-        if event.type == KEYDOWN:
-            if testsubject is not None:
-                if event.key == K_DOWN:
-                    value_y += 1
-                    testsubject.y += 5
-                if event.key == K_UP:
-                    value_y -= 1
-                    testsubject.y -= 5
-                if event.key == K_RIGHT:
-                    value_x += 1
-                    testsubject.x += 5
-                if event.key == K_LEFT:
-                    value_x -= 1
-                    testsubject.x -= 5
-                if event.key == K_m:
-                    testsubject.w +=5
-                if event.key == K_n:
-                    testsubject.w -=5
-                if event.key == K_x:
-                    testsubject.h +=5
-                if event.key == K_c:
-                    testsubject.h -=5
-    pygame.display.update()
+
