@@ -8,7 +8,7 @@ Gui.create_window(monitor_size[0],monitor_size[1],(40, 40, 43),"WariCam")
 MONITOR_MIDDLE = (monitor_size[0] / 2,monitor_size[1] / 2)
 BACKGROUND_IMG = pygame.image.load("images/background.png")
 a = pygame.image.load("images/minus_sign.png")
-
+banana_big = pygame.image.load("images/Foods/fullsize_banana.png")
 #変数の初期化
 people = 0
 children = 0
@@ -18,6 +18,8 @@ current_stage = 0
 BUTTON_COLORS = (225, 217, 209)
 frames =[]
 buying = None
+bought = []
+
 #オブジェクトのインスタンスを初期化
 
 background = GuiObject(1000,750,455,MONITOR_MIDDLE[1]-375,(255,255,255),texture=None,visible=True,stroke=False,stroke_width=5,stroke_color=(255,255,255),rounded=True,roundness=10)
@@ -28,7 +30,8 @@ c_plus_button = Button(100,100,820 + x_offset,650+ y_offset,(BUTTON_COLORS),text
 c_minus_button = Button(100,100,380 + x_offset,650+ y_offset,(BUTTON_COLORS),texture="images/minus.png",visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=10,hollow=False,background=True)
 children_text = TextBox(300,100,500 + x_offset,650+ y_offset,(BUTTON_COLORS),str(people),100,130,-30)
 continue_button = Button(400,110,750,750,(BUTTON_COLORS),texture=None,visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=10,hollow=False,background=True,text="続行",fontsize=100,text_offset_y=-20,text_offset_x=100)
-test_frame = buy_frame(100,100,(BUTTON_COLORS),"500円","バナナの皿","images/Foods/banana.png")
+banana_frame = buy_frame(100,100,(BUTTON_COLORS),"500円","バナナの皿","images/Foods/banana.png")
+banana_buy = Button(400,110,750,950,(BUTTON_COLORS),texture=None,visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=10,hollow=False,background=True,text="購入",fontsize=100,text_offset_y=-20,text_offset_x=100)
 
 #少しオブジェクトの値を変えている
 people_text.roundness = 10
@@ -36,7 +39,7 @@ people_text.rounded = True
 children_text.roundness = 10
 children_text.rounded = True
 hoverd = False
-frames.append(test_frame)
+frames.append(banana_frame)
 
 #画面に描画する関数
 
@@ -55,35 +58,48 @@ def draw_welcome():
     continue_button.draw()
 
 def draw():
-    print(current_stage)
     if current_stage == 0:
         #draw background
         Gui.screen.blit(BACKGROUND_IMG,(0,0))
         draw_welcome()
     if current_stage == 1:
         Gui.screen.fill((248, 248, 255))
-        test_frame.draw()
+        banana_frame.draw()
     if current_stage == 2:
         Gui.screen.fill((248, 248, 255))
+        if buying == "バナナの皿":
+            Gui.screen.blit(banana_big,(412,100))
+            create_center_text(DEFAULT_FONT,100,(0,0,0),MONITOR_MIDDLE[0],750,buying)
+            create_center_text(DEFAULT_FONT,50,(0,0,0),MONITOR_MIDDLE[0],850,"500円")
+            banana_buy.draw()
 def handle_button():
     global people,children,current_stage,frames,buying
     pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+    if current_stage == 0:
+        if children > 0:
+            children = c_minus_button.check_clicks(children,-1)  
+        if people > 0:
+            people = minus_button.check_clicks(people,-1)
 
-    if children > 0:
-        children = c_minus_button.check_clicks(children,-1)  
-    if people > 0:
-        people = minus_button.check_clicks(people,-1)
 
+        children = c_plus_button.check_clicks(children,1)
+        people = plus_button.check_clicks(people,1)
 
-    children = c_plus_button.check_clicks(children,1)
-    people = plus_button.check_clicks(people,1)
-
-    people_text.text = str(people)
-    children_text.text = str(children)
-    current_stage = continue_button.check_clicks(current_stage,1)
-    for frame in frames:
-        current_stage = frame.background.check_clicks(current_stage,1) 
-        buying =  frame.background.check_clicks(buying,how_much=None,bool=True) 
+        people_text.text = str(people)
+        children_text.text = str(children)
+        current_stage = continue_button.check_clicks(current_stage,1)
+    if current_stage == 1:
+        for frame in frames:
+            current_stage = frame.background.check_clicks(current_stage,1,bool=False,string=False,list=False) 
+            if frame.background.clicked == True:
+                buying =  str(frame.name)
+                print(current_stage)
+    if current_stage == 2:
+        banana_buy.check_clicks(bought,how_much="Banana Plate",bool=False,string=False,list=True)
+        if banana_buy.clicked == True:
+            current_stage = 1
+            buying = None  
+        banana_buy.clicked = False  
 #背景動作
 
 def pygame_background_functionts(testsubject=None,value_x=None,value_y=None):

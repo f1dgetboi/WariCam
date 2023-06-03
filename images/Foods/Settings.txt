@@ -1,2 +1,6 @@
+frame image
 Width: 375
 height: 300
+Buy Image
+width: 1100
+height: 560

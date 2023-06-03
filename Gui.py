@@ -84,6 +84,7 @@ class GuiObject:
         self.shadow = Shadow
         self.rect = pygame.Rect((self.x,self.y),(self.w, self.h))
         self.shadow_size = shadow_size
+        
     def draw(self):
         if self.visible == True:
             if self.shadow:
@@ -127,7 +128,7 @@ class Button(GuiObject):
         if self.text is not None:
             create_text(DEFAULT_FONT,self.fontsize,(0,0,0),self.x + self.text_offset_x,self.y + self.text_offset_y,self.text)
 
-    def check_clicks(self,value=None,how_much=None,bool=False):
+    def check_clicks(self,value=None,how_much=None,bool=False,string=False,list=False):
         pos = pygame.mouse.get_pos()
 
         self.color = self.original_color
@@ -137,9 +138,17 @@ class Button(GuiObject):
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND) 
             if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
                 self.clicked = True
+                
                 if value is not None:
                     if not bool:
-                        value =  value + how_much
+                        if string:
+                            value = how_much
+                        else:
+                            if list:
+                                value.append(how_much)
+                            else:                            
+                                value =  value + how_much
+
                     else:
                         if value:
                             value = False
@@ -191,6 +200,7 @@ class TextBox():
 
 class buy_frame():
     def __init__(self,x,y,color,price,name,photo):
+        self.name= name
         self.width = 400
         self.height = 400
         self.x = x
