@@ -16,7 +16,8 @@ y_offset = -50
 x_offset = 285
 current_stage = 0
 BUTTON_COLORS = (225, 217, 209)
-
+frames =[]
+buying = None
 #オブジェクトのインスタンスを初期化
 
 background = GuiObject(1000,750,455,MONITOR_MIDDLE[1]-375,(255,255,255),texture=None,visible=True,stroke=False,stroke_width=5,stroke_color=(255,255,255),rounded=True,roundness=10)
@@ -35,7 +36,7 @@ people_text.rounded = True
 children_text.roundness = 10
 children_text.rounded = True
 hoverd = False
-
+frames.append(test_frame)
 
 #画面に描画する関数
 
@@ -62,8 +63,10 @@ def draw():
     if current_stage == 1:
         Gui.screen.fill((248, 248, 255))
         test_frame.draw()
+    if current_stage == 2:
+        Gui.screen.fill((248, 248, 255))
 def handle_button():
-    global people,children,current_stage
+    global people,children,current_stage,frames,buying
     pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
     if children > 0:
@@ -78,7 +81,9 @@ def handle_button():
     people_text.text = str(people)
     children_text.text = str(children)
     current_stage = continue_button.check_clicks(current_stage,1)
-
+    for frame in frames:
+        current_stage = frame.background.check_clicks(current_stage,1) 
+        buying =  frame.background.check_clicks(buying,how_much=None,bool=True) 
 #背景動作
 
 def pygame_background_functionts(testsubject=None,value_x=None,value_y=None):
