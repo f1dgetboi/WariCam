@@ -15,17 +15,19 @@ children = 0
 y_offset = -50
 x_offset = 285
 current_stage = 0
+BUTTON_COLORS = (225, 217, 209)
 
 #オブジェクトのインスタンスを初期化
 
 background = GuiObject(1000,750,455,MONITOR_MIDDLE[1]-375,(255,255,255),texture=None,visible=True,stroke=False,stroke_width=5,stroke_color=(255,255,255),rounded=True,roundness=10)
-plus_button = Button(100,100,820 + x_offset,400+ y_offset,(220,220,220),texture="images/plus.png",visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=10,hollow=False,background=True)
-minus_button = Button(100,100,380 + x_offset,400+ y_offset,(220,220,220),texture="images/minus.png",visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=10,hollow=False,background=True)
-people_text = TextBox(300,100,500 + x_offset,400+ y_offset,(220,220,220),str(people),100,130,-30)
-c_plus_button = Button(100,100,820 + x_offset,650+ y_offset,(220,220,220),texture="images/plus.png",visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=10,hollow=False,background=True)
-c_minus_button = Button(100,100,380 + x_offset,650+ y_offset,(220,220,220),texture="images/minus.png",visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=10,hollow=False,background=True)
-children_text = TextBox(300,100,500 + x_offset,650+ y_offset,(220,220,220),str(people),100,130,-30)
-continue_button = Button(400,110,750,750,(220,220,220),texture=None,visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=10,hollow=False,background=True,text="続行",fontsize=100,text_offset_y=-20,text_offset_x=100)
+plus_button = Button(100,100,820 + x_offset,400+ y_offset,(BUTTON_COLORS),texture="images/plus.png",visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=10,hollow=False,background=True)
+minus_button = Button(100,100,380 + x_offset,400+ y_offset,(BUTTON_COLORS),texture="images/minus.png",visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=10,hollow=False,background=True)
+people_text = TextBox(300,100,500 + x_offset,400+ y_offset,(BUTTON_COLORS),str(people),100,130,-30)
+c_plus_button = Button(100,100,820 + x_offset,650+ y_offset,(BUTTON_COLORS),texture="images/plus.png",visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=10,hollow=False,background=True)
+c_minus_button = Button(100,100,380 + x_offset,650+ y_offset,(BUTTON_COLORS),texture="images/minus.png",visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=10,hollow=False,background=True)
+children_text = TextBox(300,100,500 + x_offset,650+ y_offset,(BUTTON_COLORS),str(people),100,130,-30)
+continue_button = Button(400,110,750,750,(BUTTON_COLORS),texture=None,visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=10,hollow=False,background=True,text="続行",fontsize=100,text_offset_y=-20,text_offset_x=100)
+test_frame = buy_frame(100,100,(BUTTON_COLORS),"500円","バナナの皿","images/Foods/banana.png")
 
 #少しオブジェクトの値を変えている
 people_text.roundness = 10
@@ -33,6 +35,7 @@ people_text.rounded = True
 children_text.roundness = 10
 children_text.rounded = True
 hoverd = False
+
 
 #画面に描画する関数
 
@@ -57,7 +60,8 @@ def draw():
         Gui.screen.blit(BACKGROUND_IMG,(0,0))
         draw_welcome()
     if current_stage == 1:
-        pass
+        Gui.screen.fill((248, 248, 255))
+        test_frame.draw()
 def handle_button():
     global people,children,current_stage
     pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
@@ -108,6 +112,8 @@ def pygame_background_functionts(testsubject=None,value_x=None,value_y=None):
                     testsubject.h +=5
                 if event.key == K_c:
                     testsubject.h -=5
+    surf = pygame.transform.scale(Gui.screen,(monitor_size))
+    Gui.display.blit(surf,(0,0))
     pygame.display.update()
 
 def plate_detection():

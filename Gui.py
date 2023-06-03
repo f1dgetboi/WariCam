@@ -10,13 +10,14 @@ DEFAULT_FONT = r"C:\Users\akiso\Desktop\Gui\fonts\Zen_Old_Mincho\ZenOldMincho-Me
 #ウィンドウの作成
 
 def create_window(width, height,background_colour,caption):
-    global screen, window_colour,WIDTH,HEIGHT
+    global screen, window_colour,WIDTH,HEIGHT,display
     WIDTH = width
     HEIGHT = height
     window_colour = background_colour
-    screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.HWSURFACE | pygame.DOUBLEBUF |pygame.FULLSCREEN)
+    display = pygame.display.set_mode((WIDTH, HEIGHT), pygame.HWSURFACE | pygame.DOUBLEBUF |pygame.FULLSCREEN)
+    screen = pygame.Surface((width, height))
     pygame.display.set_caption(str(caption))
-    screen.fill(background_colour)
+    #screen.fill(background_colour)
     pygame.display.flip()
 
 #テキストの描画
@@ -24,7 +25,11 @@ def create_text(font,fontsize,color,x,y,text):
     font = pygame.font.Font(font, fontsize)
     text = font.render(text, True, color)
     screen.blit(text, (x,y))
-
+def create_center_text(font,fontsize,color,x,y,text):
+    font = pygame.font.Font(font, fontsize)
+    text = font.render(text, True, color)
+    text_rect = text.get_rect(center=(x, y))
+    screen.blit(text, text_rect)
 #OPENCVのIMGをPYGAMEのIMGに転換
 def BGR_TO_RGB(img):
     rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -105,7 +110,7 @@ class Button(GuiObject):
         if self.text is not None:
             create_text(DEFAULT_FONT,self.fontsize,(0,0,0),self.x + self.text_offset_x,self.y + self.text_offset_y,self.text)
 
-    def check_clicks(self,value=None,how_much=None):
+    def check_clicks(self,value=None,how_much=None,bool=False):
         pos = pygame.mouse.get_pos()
 
         self.color = self.original_color
@@ -116,7 +121,13 @@ class Button(GuiObject):
             if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
                 self.clicked = True
                 if value is not None:
-                    value =  value + how_much
+                    if not bool:
+                        value =  value + how_much
+                    else:
+                        if value:
+                            value = False
+                        if not value:
+                            value = True
             
         if pygame.mouse.get_pressed()[0] == 0:
             self.clicked = False
@@ -160,4 +171,22 @@ class TextBox():
                 pygame.draw.rect(screen, self.color,((self.x,self.y),(self.w, self.h)),int(self.hollow))
                 create_text(DEFAULT_FONT,self.fontsize,(0,0,0),self.x + self.text_offset_x,self.y + self.text_offset_y,self.text)
 
+class buy_frame():
+    def __init__(self,x,y,color,price,name,photo):
+        self.width = 400
+        self.height = 400
+        self.x = x
+        self.y = y
+        self.color = color
+        self.price = price
+        self.name = name
+        self.photo = self.texture = pygame.image.load(photo)
 
+    def draw(self):
+        background = GuiObject(self.width,self.height,self.x,self.y,self.color)
+        background.rounded = True
+        background.roundness = 10
+        background.draw()
+        screen.blit(self.photo,(self.x + 13 ,self.y + 10))
+        create_center_text(DEFAULT_FONT,50,(0,0,0),self.x + self.width /2  ,self.y + self.height- 60 ,self.name)
+        create_center_text(DEFAULT_FONT,30,(100,100,100),self.x + self.width /2 -50 ,self.y + self.height- 10 ,self.price)
