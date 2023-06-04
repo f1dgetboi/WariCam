@@ -122,7 +122,7 @@ class Button(GuiObject):
         self.fontsize = fontsize
         self.text_offset_x = text_offset_x
         self.text_offset_y = text_offset_y
-
+        self.changed = False
     def draw(self):
         super().draw()
         if self.text is not None:
@@ -137,8 +137,7 @@ class Button(GuiObject):
             self.color = self.hoverd_color
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND) 
             if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
-                self.clicked = True
-                
+                self.clicked = True                
                 if value is not None:
                     if not bool:
                         if string:
@@ -148,15 +147,16 @@ class Button(GuiObject):
                                 value.append(how_much)
                             else:                            
                                 value =  value + how_much
-
                     else:
-                        if value:
+                        if value == True and self.changed == False:
                             value = False
-                        if not value:
+                            self.changed = True
+                        if value == False and self.changed == False:
                             value = True
             
         if pygame.mouse.get_pressed()[0] == 0:
             self.clicked = False
+            self.changed = False
         return value
 
             
@@ -222,3 +222,46 @@ class buy_frame():
         screen.blit(self.photo,(self.x + 13 ,self.y + 10))
         create_center_text(DEFAULT_FONT,50,(0,0,0),self.x + self.width /2  ,self.y + self.height- 60 ,self.name)
         create_center_text(DEFAULT_FONT,30,(100,100,100),self.x + self.width /2 ,self.y + self.height- 17 ,self.price)
+
+COLOR_ACTIVE = (10,10,10)
+COLOR_INACTIVE = (100,100,100)
+
+class InputBox:
+
+    def __init__(self, x, y, w, h, text=''):
+        self.rect = pygame.Rect(x, y, w, h)
+        self.color = COLOR_INACTIVE
+        self.text = text
+        self.txt_surface =  pygame.font.Font(DEFAULT_FONT,32).render(text, True, self.color)
+        self.active = False
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+
+            if self.rect.collidepoint(event.pos):
+                self.active = not self.active
+            else:
+                self.active = False
+            self.color = COLOR_ACTIVE if self.active else COLOR_INACTIVE
+        if event.type == pygame.KEYDOWN:
+            if self.active:
+                if event.key == pygame.K_RETURN:
+                    print(self.text)
+                    self.text = ''
+                elif event.key == pygame.K_BACKSPACE:
+                    self.text = self.text[:-1]
+                else:
+                    self.text += event.unicode
+                self.txt_surface =  pygame.font.Font(DEFAULT_FONT,32).render(self.text, True, self.color)
+
+    def update(self):
+        if self.rect.collidepoint(pygame.mouse.get_pos()):
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_IBEAM)      
+        width = max(150, self.txt_surface.get_width()+10)
+        self.rect.w = width
+
+    def draw(self, screen):
+        pygame.draw.rect(screen, (255,255,255), self.rect, 0)
+        pygame.draw.rect(screen, self.color, self.rect, 5)
+        screen.blit(self.txt_surface, (self.rect.x+5, self.rect.y-5))
+

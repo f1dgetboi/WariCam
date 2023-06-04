@@ -9,20 +9,28 @@ MONITOR_MIDDLE = (monitor_size[0] / 2,monitor_size[1] / 2)
 BACKGROUND_IMG = pygame.image.load("images/background.png")
 a = pygame.image.load("images/minus_sign.png")
 banana_big = pygame.image.load("images/Foods/fullsize_banana.png")
+Table = pygame.image.load("images/Table.png")
 #変数の初期化
 people = 0
 children = 0
-y_offset = -50
+y_offset = -100
 x_offset = 285
 current_stage = 0
 BUTTON_COLORS = (225, 217, 209)
 frames =[]
 buying = None
 bought = []
+input_box1 = InputBox(MONITOR_MIDDLE[0] - 80, 250, 10, 40)
+input_box2 = InputBox(565, 700, 50, 40)
+input_box3 = InputBox(565, 450, 50, 40)
+input_box4 = InputBox(1200, 700, 50, 40)
+input_box5 = InputBox(1200, 450, 50, 40)
+input_boxes = [input_box1, input_box2, input_box3, input_box4, input_box5]
 
 #オブジェクトのインスタンスを初期化
 
 background = GuiObject(1000,750,455,MONITOR_MIDDLE[1]-375,(255,255,255),texture=None,visible=True,stroke=False,stroke_width=5,stroke_color=(255,255,255),rounded=True,roundness=10)
+background_2 = GuiObject(1000,900,455,MONITOR_MIDDLE[1]-375,(255,255,255),texture=None,visible=True,stroke=False,stroke_width=5,stroke_color=(255,255,255),rounded=True,roundness=10)
 plus_button = Button(100,100,820 + x_offset,400+ y_offset,(BUTTON_COLORS),texture="images/plus.png",visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=10,hollow=False,background=True)
 minus_button = Button(100,100,380 + x_offset,400+ y_offset,(BUTTON_COLORS),texture="images/minus.png",visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=10,hollow=False,background=True)
 people_text = TextBox(300,100,500 + x_offset,400+ y_offset,(BUTTON_COLORS),str(people),100,130,-30)
@@ -30,8 +38,10 @@ c_plus_button = Button(100,100,820 + x_offset,650+ y_offset,(BUTTON_COLORS),text
 c_minus_button = Button(100,100,380 + x_offset,650+ y_offset,(BUTTON_COLORS),texture="images/minus.png",visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=10,hollow=False,background=True)
 children_text = TextBox(300,100,500 + x_offset,650+ y_offset,(BUTTON_COLORS),str(people),100,130,-30)
 continue_button = Button(400,110,750,750,(BUTTON_COLORS),texture=None,visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=10,hollow=False,background=True,text="続行",fontsize=100,text_offset_y=-20,text_offset_x=100)
+continue_button_2 = Button(400,110,750,925,(BUTTON_COLORS),texture=None,visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=10,hollow=False,background=True,text="続行",fontsize=100,text_offset_y=-20,text_offset_x=100)
 banana_frame = buy_frame(100,100,(BUTTON_COLORS),"500円","バナナの皿","images/Foods/banana.png")
 banana_buy = Button(400,110,750,950,(BUTTON_COLORS),texture=None,visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=10,hollow=False,background=True,text="購入",fontsize=100,text_offset_y=-20,text_offset_x=100)
+Warikan_button = Button(300,50,800,675,(BUTTON_COLORS),texture="images/Logos/off.png",visible=True,stroke=False,stroke_width=3,stroke_color=(100,100,100),rounded=True,roundness=3,hollow=False,background=True,text="割り勘機能を使用",fontsize=30,text_offset_y=0,text_offset_x=50)
 
 #少しオブジェクトの値を変えている
 people_text.roundness = 10
@@ -39,6 +49,7 @@ people_text.rounded = True
 children_text.roundness = 10
 children_text.rounded = True
 hoverd = False
+Warikan = False
 frames.append(banana_frame)
 
 #画面に描画する関数
@@ -62,9 +73,11 @@ def draw():
         #draw background
         Gui.screen.blit(BACKGROUND_IMG,(0,0))
         draw_welcome()
+        Warikan_button.draw()
     if current_stage == 1:
         Gui.screen.fill((248, 248, 255))
         banana_frame.draw()
+       
     if current_stage == 2:
         Gui.screen.fill((248, 248, 255))
         if buying == "バナナの皿":
@@ -72,8 +85,14 @@ def draw():
             create_center_text(DEFAULT_FONT,100,(0,0,0),MONITOR_MIDDLE[0],750,buying)
             create_center_text(DEFAULT_FONT,50,(0,0,0),MONITOR_MIDDLE[0],850,"500円")
             banana_buy.draw()
+    if current_stage == 3:
+        Gui.screen.blit(BACKGROUND_IMG,(0,0))
+        background_2.draw()
+        continue_button_2.draw()
+        Gui.screen.blit(Table,(455,MONITOR_MIDDLE[1]-375))
+
 def handle_button():
-    global people,children,current_stage,frames,buying
+    global people,children,current_stage,frames,buying,Warikan
     pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
     if current_stage == 0:
         if children > 0:
@@ -84,10 +103,15 @@ def handle_button():
 
         children = c_plus_button.check_clicks(children,1)
         people = plus_button.check_clicks(people,1)
-
+        Warikan = Warikan_button.check_clicks(Warikan,how_much=None,bool=True)
         people_text.text = str(people)
         children_text.text = str(children)
-        current_stage = continue_button.check_clicks(current_stage,1)
+        if Warikan == False:
+            Warikan_button.texture = pygame.image.load("images/Logos/off.png")           
+            current_stage = continue_button.check_clicks(current_stage,1)
+        if Warikan == True:
+            Warikan_button.texture = pygame.image.load("images/Logos/on.png")
+            current_stage = continue_button.check_clicks(current_stage,3)
     if current_stage == 1:
         for frame in frames:
             current_stage = frame.background.check_clicks(current_stage,1,bool=False,string=False,list=False) 
@@ -99,7 +123,12 @@ def handle_button():
         if banana_buy.clicked == True:
             current_stage = 1
             buying = None  
-        banana_buy.clicked = False  
+        banana_buy.clicked = False 
+    if current_stage == 3:
+        for box in input_boxes:
+            box.update()
+            box.draw(Gui.screen) 
+        current_stage = continue_button_2.check_clicks(current_stage,-1)
 #背景動作
 
 def pygame_background_functionts(testsubject=None,value_x=None,value_y=None):
@@ -133,6 +162,10 @@ def pygame_background_functionts(testsubject=None,value_x=None,value_y=None):
                     testsubject.h +=5
                 if event.key == K_c:
                     testsubject.h -=5
+
+        for box in input_boxes:
+                box.handle_event(event)
+
     surf = pygame.transform.scale(Gui.screen,(monitor_size))
     Gui.display.blit(surf,(0,0))
     pygame.display.update()
@@ -161,8 +194,8 @@ while True:
     
     #find plates
     handle_button()
+    pygame_background_functionts()
     draw()
     #display computer vision onto screen
     #Gui.screen.blit(resize_image(BGR_TO_RGB(img),800,450),(100,100))
-    pygame_background_functionts()
     mainClock.tick(60)
