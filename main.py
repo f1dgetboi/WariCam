@@ -1,13 +1,14 @@
 from Gui import *
 import Gui
-#from platedetection import *
+from platedetection import *
 import math
+import handtrackingmodule
+from handtrackingmodule import *
 mainClock = pygame.time.Clock()
 Gui.create_window(monitor_size[0],monitor_size[1],(40, 40, 43),"WariCam")
 
 MONITOR_MIDDLE = (monitor_size[0] / 2,monitor_size[1] / 2)
 BACKGROUND_IMG = pygame.image.load("images/background.png")
-a = pygame.image.load("images/minus_sign.png")
 banana_big = pygame.image.load("images/Foods/fullsize_banana.png")
 Table = pygame.image.load("images/Table.png")
 #変数の初期化
@@ -26,6 +27,8 @@ input_box3 = InputBox(565, 450, 50, 40)
 input_box4 = InputBox(1200, 700, 50, 40)
 input_box5 = InputBox(1200, 450, 50, 40)
 input_boxes = [input_box1, input_box2, input_box3, input_box4, input_box5]
+detector = handDetector()
+places = []
 
 #オブジェクトのインスタンスを初期化
 
@@ -42,8 +45,10 @@ continue_button_2 = Button(400,110,750,925,(BUTTON_COLORS),texture=None,visible=
 banana_frame = buy_frame(100,100,(BUTTON_COLORS),"500円","バナナの皿","images/Foods/banana.png")
 banana_buy = Button(400,110,750,950,(BUTTON_COLORS),texture=None,visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=10,hollow=False,background=True,text="購入",fontsize=100,text_offset_y=-20,text_offset_x=100)
 Warikan_button = Button(300,50,800,675,(BUTTON_COLORS),texture="images/Logos/off.png",visible=True,stroke=False,stroke_width=3,stroke_color=(100,100,100),rounded=True,roundness=3,hollow=False,background=True,text="割り勘機能を使用",fontsize=30,text_offset_y=0,text_offset_x=50)
-
+back_button = Button(150,60,1750,30,(BUTTON_COLORS),texture="images/back.png",visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=2,hollow=False,background=True,text="戻る",fontsize=50,text_offset_y=-10,text_offset_x=50)
+warikan_look = Button(300,60,1600,1000,(BUTTON_COLORS),texture=None,visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=2,hollow=False,background=True,text="割り勘を見る",fontsize=40,text_offset_y=0,text_offset_x=10)
 #少しオブジェクトの値を変えている
+
 people_text.roundness = 10
 people_text.rounded = True
 children_text.roundness = 10
@@ -51,6 +56,44 @@ children_text.rounded = True
 hoverd = False
 Warikan = False
 frames.append(banana_frame)
+
+#皿の認証
+def plate_detection():
+    #global x1,y1,x2,y2,w,h
+    scuccess, img = cap.read()
+    results = model(img,classes= 46, stream=True)
+    for person in places.values():           
+        for r in results:
+            boxes = r.boxes
+            for box in boxes:
+                #bounding boxes
+                x1,y1,x2,y2 = box.xyxy[0]
+                x1,y1,x2,y2 = int(x1),int(y1),int(x2),int(y2)
+                #cv2.rectangle(img,(x1,y1),(x2,y2),(0,0,255),3)
+                # cv2.putText(img, str(conf), (x1,y1), cv2.FONT_HERSHEY_COMPLEX, 3, (0, 0, 255), 3)
+                w,h = x2-x1,y2-y1
+                cvzone.cornerRect(img,(x1,y1,w,h))
+                conf = math.ceil((box.conf[0]*100))/100
+                cls = box.cls[0]
+                if person[0] <= x1 and person[1] >= x2 and person[2] <= y1 and person[3] >= y2 :
+                    pass
+                cvzone.putTextRect(img,f"{person}s banana  {conf}",(max(0,x1),max(35,y1)))
+                print(str(x1),str(y1),str(x2),str(y2))
+                print(str(person[0]),str(person[1]),str(person[2]),str(person[3]))
+                
+    height = img.shape[0]
+    width = img.shape[1]
+    img = detector.findHands(img)
+    lmlist = detector.findPosition(img)
+    cv2.waitKey(1)
+    return img
+
+def get_keys_by_value(dictionary, value):
+    keys = []
+    for key, val in dictionary.items():
+        if val == value:
+            keys.append(key)
+    return keys
 
 #画面に描画する関数
 
@@ -77,7 +120,8 @@ def draw():
     if current_stage == 1:
         Gui.screen.fill((248, 248, 255))
         banana_frame.draw()
-       
+        if Warikan == True:
+            warikan_look.draw()
     if current_stage == 2:
         Gui.screen.fill((248, 248, 255))
         if buying == "バナナの皿":
@@ -85,14 +129,17 @@ def draw():
             create_center_text(DEFAULT_FONT,100,(0,0,0),MONITOR_MIDDLE[0],750,buying)
             create_center_text(DEFAULT_FONT,50,(0,0,0),MONITOR_MIDDLE[0],850,"500円")
             banana_buy.draw()
+        back_button.draw()
     if current_stage == 3:
         Gui.screen.blit(BACKGROUND_IMG,(0,0))
         background_2.draw()
         continue_button_2.draw()
         Gui.screen.blit(Table,(455,MONITOR_MIDDLE[1]-375))
+    if current_stage == 4:
+        Gui.screen.blit(resize_image(BGR_TO_RGB(plate_detection()),800,450),(100,100))
 
 def handle_button():
-    global people,children,current_stage,frames,buying,Warikan
+    global people,children,current_stage,frames,buying,Warikan,places
     pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
     if current_stage == 0:
         if children > 0:
@@ -112,24 +159,39 @@ def handle_button():
         if Warikan == True:
             Warikan_button.texture = pygame.image.load("images/Logos/on.png")
             current_stage = continue_button.check_clicks(current_stage,3)
+
     if current_stage == 1:
         for frame in frames:
             current_stage = frame.background.check_clicks(current_stage,1,bool=False,string=False,list=False) 
             if frame.background.clicked == True:
                 buying =  str(frame.name)
                 print(current_stage)
+        if Warikan == True:
+            current_stage = warikan_look.check_clicks(current_stage,3)
+
     if current_stage == 2:
         banana_buy.check_clicks(bought,how_much="Banana Plate",bool=False,string=False,list=True)
         if banana_buy.clicked == True:
             current_stage = 1
             buying = None  
         banana_buy.clicked = False 
+        current_stage = back_button.check_clicks(current_stage,-1)
+
     if current_stage == 3:
         for box in input_boxes:
             box.update()
             box.draw(Gui.screen) 
+        places = {input_box1.text :[0,100,0,1080], 
+                 input_box2.text : [960,1920,1000,1080],
+                 input_box3.text : [0,960,1000,1080], 
+                 input_box4.text : [960,1920,0,100], 
+                 input_box5.text : [0,960,0,100]}
         current_stage = continue_button_2.check_clicks(current_stage,-1)
+        for person in places.values():
+            print(str(person[0]) + str(person[1]) + str(person[2]) + str(person[3]))
 #背景動作
+
+
 
 def pygame_background_functionts(testsubject=None,value_x=None,value_y=None):
     for event in pygame.event.get():
@@ -170,25 +232,7 @@ def pygame_background_functionts(testsubject=None,value_x=None,value_y=None):
     Gui.display.blit(surf,(0,0))
     pygame.display.update()
 
-def plate_detection():
-    #global x1,y1,x2,y2,w,h
-    scuccess, img = cap.read()
-    results = model(img, stream=True)
-    for r in results:
-        boxes = r.boxes
-        for box in boxes:
-            #bounding boxes
-           x1,y1,x2,y2 = box.xyxy[0]
-           x1,y1,x2,y2 = int(x1),int(y1),int(x2),int(y2)
-           #cv2.rectangle(img,(x1,y1),(x2,y2),(0,0,255),3)
-           # cv2.putText(img, str(conf), (x1,y1), cv2.FONT_HERSHEY_COMPLEX, 3, (0, 0, 255), 3)
-           w,h = x2-x1,y2-y1
-           cvzone.cornerRect(img,(x1,y1,w,h))
-           conf = math.ceil((box.conf[0]*100))/100
-           cls = box.cls[0]
-           cvzone.putTextRect(img,f"Plate  {conf}",(max(0,x1),max(35,y1)))
 
-    cv2.waitKey(1)
 
 while True:
     
@@ -197,5 +241,4 @@ while True:
     pygame_background_functionts()
     draw()
     #display computer vision onto screen
-    #Gui.screen.blit(resize_image(BGR_TO_RGB(img),800,450),(100,100))
     mainClock.tick(60)

@@ -74,7 +74,7 @@ class GuiObject:
         self.hollow = hollow
         if texture is not None:
             self.texture = pygame.image.load(texture)
-            self.texture = resize_image(self.texture,self.w,self.h)
+            #self.texture = resize_image(self.texture,self.w,self.h)
             print("working")
         else:
             self.texture = None

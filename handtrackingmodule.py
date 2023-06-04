@@ -1,5 +1,6 @@
-from imports import *
-
+import mediapipe as mp
+import time
+import cv2
 class handDetector():
    
     def __init__(self,mode=False,maxHands = 2, modelComplexity=1,detectionCon=0.5,trackCon=0.5):
@@ -37,9 +38,9 @@ class handDetector():
                      cv2.circle(img,(cx,cy),15,(255,0,255),cv2.FILLED)
     
         return lmlist
-
+"""
 def main():
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
     pTime = 0
     cTime = 0
     detector = handDetector()
@@ -50,9 +51,9 @@ def main():
         img = detector.findHands(img)
         lmlist = detector.findPosition(img)
         print(lmlist)
-        cTime = time.time()
-        fps = 1/(cTime -pTime)
-        pTime = cTime
+        #cTime = time.time()
+        #fps = 1/(cTime -pTime)
+        #pTime = cTime
 
         #cv2.putText(img,str(int(fps)),(10,70),cv2.FONT_HERSHEY_COMPLEX,3,(0,0,255),3)
 
@@ -61,3 +62,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+"""
