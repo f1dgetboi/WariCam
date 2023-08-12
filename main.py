@@ -4,6 +4,8 @@ from platedetection import *
 import math
 import handtrackingmodule
 from handtrackingmodule import *
+import threading
+
 mainClock = pygame.time.Clock()
 Gui.create_window(monitor_size[0],monitor_size[1],(40, 40, 43),"WariCam")
 
@@ -29,7 +31,22 @@ input_box5 = InputBox(1200, 450, 50, 40)
 input_boxes = [input_box1, input_box2, input_box3, input_box4, input_box5]
 detector = handDetector()
 places = []
+Banana_kazu = [0,0,0,0,0]
+tabeta_kazu = [0,0,0,0,0]
+changed = False
+eating_people = []
+change_referance = 0
+whole_table_banana = 0
+iterations_elapsed = [[0],
+                      [0],
+                      [0],
+                      [0],
+                      [0]]
 
+bananas = [0,0,0,0,0]
+referances = [0,0,0,0,0]
+difference = [0,0,0,0,0] 
+original_difference = [0,0,0,0,0]
 #オブジェクトのインスタンスを初期化
 
 background = GuiObject(1000,750,455,MONITOR_MIDDLE[1]-375,(255,255,255),texture=None,visible=True,stroke=False,stroke_width=5,stroke_color=(255,255,255),rounded=True,roundness=10)
@@ -54,39 +71,8 @@ people_text.rounded = True
 children_text.roundness = 10
 children_text.rounded = True
 hoverd = False
-Warikan = False
+Warikan = True
 frames.append(banana_frame)
-
-#皿の認証
-def plate_detection():
-    #global x1,y1,x2,y2,w,h
-    scuccess, img = cap.read()
-    results = model(img,classes= 46, stream=True)
-    for person in places.values():           
-        for r in results:
-            boxes = r.boxes
-            for box in boxes:
-                #bounding boxes
-                x1,y1,x2,y2 = box.xyxy[0]
-                x1,y1,x2,y2 = int(x1),int(y1),int(x2),int(y2)
-                #cv2.rectangle(img,(x1,y1),(x2,y2),(0,0,255),3)
-                # cv2.putText(img, str(conf), (x1,y1), cv2.FONT_HERSHEY_COMPLEX, 3, (0, 0, 255), 3)
-                w,h = x2-x1,y2-y1
-                cvzone.cornerRect(img,(x1,y1,w,h))
-                conf = math.ceil((box.conf[0]*100))/100
-                cls = box.cls[0]
-                if person[0] <= x1 and person[1] >= x2 and person[2] <= y1 and person[3] >= y2 :
-                    pass
-                cvzone.putTextRect(img,f"{person}s banana  {conf}",(max(0,x1),max(35,y1)))
-                print(str(x1),str(y1),str(x2),str(y2))
-                print(str(person[0]),str(person[1]),str(person[2]),str(person[3]))
-                
-    height = img.shape[0]
-    width = img.shape[1]
-    img = detector.findHands(img)
-    lmlist = detector.findPosition(img)
-    cv2.waitKey(1)
-    return img
 
 def get_keys_by_value(dictionary, value):
     keys = []
@@ -94,6 +80,126 @@ def get_keys_by_value(dictionary, value):
         if val == value:
             keys.append(key)
     return keys
+
+def get_index_of_value(dictionary, value):
+    for index, val in enumerate(dictionary.values()):
+        if val == value:
+            return index
+    return -1
+
+#皿の認証
+def Banana_detection_Whole_table():
+    global whole_table_banana
+    #global x1,y1,x2,y2,w,h
+    scuccess, img = cap.read()
+    results = model(img,classes= 46, stream=True)
+    for r in results:
+        boxes = list(r.boxes)    
+    whole_table_banana = len(boxes)
+        
+    return whole_table_banana
+
+
+def Banana_detection_Whole_table():
+    #global x1,y1,x2,y2,w,h
+    scuccess, img = cap.read()
+    results = model(img,classes= 46, stream=True)          
+    for r in results:
+        boxes = r.boxes
+        for box in boxes:
+            x1,y1,x2,y2 = box.xyxy[0]
+            x1,y1,x2,y2 = int(x1),int(y1),int(x2),int(y2)
+            #cv2.rectangle(img,(x1,y1),(x2,y2),(0,0,255),3)
+            # cv2.putText(img, str(conf), (x1,y1), cv2.FONT_HERSHEY_COMPLEX, 3, (0, 0, 255), 3)
+            w,h = x2-x1,y2-y1
+            MIDDLE = (x1 + (w)/2,y1 + (h)/2)
+            cvzone.cornerRect(img,(x1,y1,w,h))
+            conf = math.ceil((box.conf[0]*100))/100
+            cls = box.cls[0]
+            for person in places.values(): 
+        
+                #print(f"MIDDLE: {MIDDLE}")
+                #print("Coordinates in places:")
+                if person[0] <= MIDDLE[0] and person[1] >= MIDDLE[0] and person[2] <= MIDDLE[1] and person[3] >= MIDDLE[1] :
+                    print("True")
+                    cvzone.putTextRect(img,f"{get_keys_by_value(places,person)}s banana  {conf}",(max(0,x1),max(35,y1)))
+                    if Banana_kazu[get_index_of_value(places,person)] < 1:
+                        Banana_kazu[get_index_of_value(places,person)] += 1 
+
+                print(" x1: " + str(x1)," x2: " + str(x2)," y1: " + str(y1)," y2: " + str(y2))
+                print(f"MIDDLE: {MIDDLE}")
+                print(str(person[0]),str(person[1]),str(person[2]),str(person[3]))   
+    height = img.shape[0]
+    width = img.shape[1]
+    img = detector.findHands(img)
+    lmlist = detector.findPosition(img)
+    cv2.waitKey(1)
+    return img
+
+
+
+def Banana_detection_each_person(x1,x2,y1,y2):
+    global change_referance
+    scuccess, img = cap.read()
+
+    cropped_image = img[y1:y2, x1:x2]
+    results = model(cropped_image,classes= 46, stream=True) 
+    for r in results:
+        boxes = list(r.boxes)    
+    change_referance = len(boxes)
+    cv2.waitKey(1)
+    return change_referance
+
+def check_referance():
+    global Banana_kazu,tabeta_kazu,iterations_elapsed,bananas,referances,difference,original_difference
+    
+    whole_table_bananas = Banana_detection_Whole_table()
+    for person in places.values(): 
+        bananas[get_index_of_value(places,person)] = Banana_detection_each_person(person[0],person[1],person[2],person[3]) 
+
+    for i in Banana_kazu:
+            
+        if Banana_kazu[i] > bananas[i]:
+            referances[i] = bananas[i]
+            original_difference[i] = Banana_kazu[i] - bananas[i]
+
+
+        if len(iterations_elapsed[i]) < difference[i]:
+            iterations_elapsed[i].append(0) 
+
+        elif len(iterations_elapsed[i]) > difference[i]:
+            iterations_elapsed[i][:-1] 
+
+        for iteration in iterations_elapsed[i]:
+            if iterations_elapsed[i][iteration] > 450 :
+                iterations_elapsed[i][:-1] 
+                tabeta_kazu[i] += 1
+            else:
+                if referances[i] < Banana_kazu[i]:
+                    iterations_elapsed[i][iteration] += 1
+                    difference[i] = Banana_kazu[i] - bananas[i]
+        print(f"iterations:{iterations_elapsed}")
+        print(f"difference:{difference}")
+
+    return whole_table_bananas,bananas,iterations_elapsed
+    
+#if there comes new bananas and there comes another one into your area check the other areas and find if that banan came to you therefore add 1 number of banana to the search value too make it more accurate
+
+
+def check_if_update():
+    global tabeta_kazu
+    i = 0
+    check_referance()
+    for person in places.values(): 
+        Banana_kazu[i] = Banana_detection_each_person(person[0],person[1],person[2],person[3])
+        i += 1
+
+    
+
+    
+
+    
+
 
 #画面に描画する関数
 
@@ -136,7 +242,14 @@ def draw():
         continue_button_2.draw()
         Gui.screen.blit(Table,(455,MONITOR_MIDDLE[1]-375))
     if current_stage == 4:
-        Gui.screen.blit(resize_image(BGR_TO_RGB(plate_detection()),800,450),(100,100))
+        Gui.screen.fill((248, 248, 255))
+        #check_if_update()
+        Gui.screen.blit(resize_image(BGR_TO_RGB(Banana_detection_Whole_table()),800,450),(100,100))
+        create_center_text(DEFAULT_FONT, 100, (0, 0, 0), MONITOR_MIDDLE[0], MONITOR_MIDDLE[1], f"{input_box1.text} has {tabeta_kazu[0]} bananas")
+        create_center_text(DEFAULT_FONT, 100, (0, 0, 0), MONITOR_MIDDLE[0], MONITOR_MIDDLE[1] + 100, f"{input_box2.text} has {tabeta_kazu[1]} bananas")
+        create_center_text(DEFAULT_FONT, 100, (0, 0, 0), MONITOR_MIDDLE[0], MONITOR_MIDDLE[1] + 200, f"{input_box3.text} has {tabeta_kazu[2]} bananas")
+        create_center_text(DEFAULT_FONT, 100, (0, 0, 0), MONITOR_MIDDLE[0], MONITOR_MIDDLE[1] + 300, f"{input_box4.text} has {tabeta_kazu[3]} bananas")
+        create_center_text(DEFAULT_FONT, 100, (0, 0, 0), MONITOR_MIDDLE[0], MONITOR_MIDDLE[1] + 400, f"{input_box5.text} has {tabeta_kazu[4]} bananas")
 
 def handle_button():
     global people,children,current_stage,frames,buying,Warikan,places
@@ -181,11 +294,12 @@ def handle_button():
         for box in input_boxes:
             box.update()
             box.draw(Gui.screen) 
-        places = {input_box1.text :[0,100,0,1080], 
-                 input_box2.text : [960,1920,1000,1080],
-                 input_box3.text : [0,960,1000,1080], 
-                 input_box4.text : [960,1920,0,100], 
-                 input_box5.text : [0,960,0,100]}
+        places = {input_box1.text :[0,250,230,850], 
+                 input_box2.text : [1166,1920,846,1080],
+                 input_box3.text : [400,1016,846,1080], 
+                 input_box4.text : [1166,1920,0,250], 
+                 input_box5.text : [400,1016,0,250]}
+        eating_people = [input_box1.text, input_box2.text,input_box3.text, input_box4.text, input_box5.text]
         current_stage = continue_button_2.check_clicks(current_stage,-1)
         for person in places.values():
             print(str(person[0]) + str(person[1]) + str(person[2]) + str(person[3]))
@@ -241,4 +355,4 @@ while True:
     pygame_background_functionts()
     draw()
     #display computer vision onto screen
-    mainClock.tick(60)
+    mainClock.tick(30)
