@@ -6,6 +6,10 @@ import math
 #from handtrackingmodule import *
 import threading
 import numpy as np
+import pygame, sys
+from pygame.locals import *
+import cv2
+from ultralytics import YOLO
 
 global whole_table_banana,banana_diff_global
 
@@ -46,7 +50,7 @@ eating_people = []
 bananas = [0,0,0,0,0]
 success,img=cap.read()
 whole_table_banana = 0
-
+mode = "light"
 #オブジェクトのインスタンスを初期化
 
 background = GuiObject(1000,750,455,MONITOR_MIDDLE[1]-375,(255,255,255),texture=None,visible=True,stroke=False,stroke_width=5,stroke_color=(255,255,255),rounded=True,roundness=10)
@@ -101,8 +105,9 @@ class person:
         # CAPTURE BOXES IN LOCAL AREA
         self.current_frame_whole_table_food[0] = 0
         self.current_frame_local_food[0] = 0
+        model.to('cuda')
+        results = model(img,classes= 64)
 
-        results = model(img,classes= 46)
         for r in results:
             boxes = r.boxes
 
@@ -329,12 +334,19 @@ def handle_button():
     if current_stage == 3:
         for box in input_boxes:
             box.update()
-            box.draw(Gui.screen) 
-        places = [input_box1.text ,[0,250,230,850], 
-                 input_box2.text , [1166,1920,846,1080],
-                 input_box3.text , [400,1016,846,1080], 
-                 input_box4.text , [1166,1920,0,250], 
-                 input_box5.text , [400,1016,0,250]]
+            box.draw(Gui.screen)
+        if mode == "heavy": 
+            places = [input_box1.text ,[0,250,230,850], 
+                    input_box2.text , [1166,1920,846,1080],
+                    input_box3.text , [400,1016,846,1080], 
+                    input_box4.text , [1166,1920,0,250], 
+                    input_box5.text , [400,1016,0,250]]
+        if mode == "light":
+            places = [input_box1.text ,[0,84,77,283], 
+                    input_box2.text , [382,640,276,360],
+                    input_box3.text , [127,333,276,360], 
+                    input_box4.text , [382,640,0,84], 
+                    input_box5.text , [127,333,0,84]]    
 #       eating_people = [input_box1.text, input_box2.text,input_box3.text, input_box4.text, input_box5.text]
         current_stage = continue_button_2.check_clicks(current_stage,-1)
         if continue_button_2.clicked:
@@ -400,5 +412,6 @@ while True:
     draw()
     #display computer vision onto screen
     mainClock.tick(30)
+
 
 
