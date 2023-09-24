@@ -10,12 +10,19 @@ import pygame, sys
 from pygame.locals import *
 import cv2
 from ultralytics import YOLO
+import readexcel
+import time
+from tkinter import filedialog
+import tkinter as tk
 
 global whole_table_banana,banana_diff_global
 
 
 mainClock = pygame.time.Clock()
 Gui.create_window(monitor_size[0],monitor_size[1],(40, 40, 43),"WariCam")
+
+root = tk.Tk()
+root.withdraw()
 
 MONITOR_MIDDLE = (monitor_size[0] / 2,monitor_size[1] / 2)
 BACKGROUND_IMG = pygame.image.load("images/background.png")
@@ -28,9 +35,9 @@ y_offset = -100
 x_offset = 285
 current_stage = 0
 BUTTON_COLORS = (225, 217, 209)
-frames =[]
 buying = None
 bought = []
+frames=[]
 input_box1 = InputBox(MONITOR_MIDDLE[0] - 80, 250, 10, 40)
 input_box2 = InputBox(565, 700, 50, 40)
 input_box3 = InputBox(565, 450, 50, 40)
@@ -51,6 +58,7 @@ bananas = [0,0,0,0,0]
 success,img=cap.read()
 whole_table_banana = 0
 mode = "light"
+
 #オブジェクトのインスタンスを初期化
 
 background = GuiObject(1000,750,455,MONITOR_MIDDLE[1]-375,(255,255,255),texture=None,visible=True,stroke=False,stroke_width=5,stroke_color=(255,255,255),rounded=True,roundness=10)
@@ -63,7 +71,7 @@ c_minus_button = Button(100,100,380 + x_offset,650+ y_offset,(BUTTON_COLORS),tex
 children_text = TextBox(300,100,500 + x_offset,650+ y_offset,(BUTTON_COLORS),str(people),100,130,-30)
 continue_button = Button(400,110,750,750,(BUTTON_COLORS),texture=None,visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=10,hollow=False,background=True,text="続行",fontsize=100,text_offset_y=-20,text_offset_x=100)
 continue_button_2 = Button(400,110,750,925,(BUTTON_COLORS),texture=None,visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=10,hollow=False,background=True,text="続行",fontsize=100,text_offset_y=-20,text_offset_x=100)
-banana_frame = buy_frame(100,100,(BUTTON_COLORS),"500円","バナナの皿","images/Foods/banana.png")
+#banana_frame = buy_frame(100,100,(BUTTON_COLORS),"500円","バナナの皿","images/Foods/banana.png")
 banana_buy = Button(400,110,750,950,(BUTTON_COLORS),texture=None,visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=10,hollow=False,background=True,text="購入",fontsize=100,text_offset_y=-20,text_offset_x=100)
 Warikan_button = Button(300,50,800,675,(BUTTON_COLORS),texture="images/Logos/off.png",visible=True,stroke=False,stroke_width=3,stroke_color=(100,100,100),rounded=True,roundness=3,hollow=False,background=True,text="割り勘機能を使用",fontsize=30,text_offset_y=0,text_offset_x=50)
 back_button = Button(150,60,1750,30,(BUTTON_COLORS),texture="images/back.png",visible=True,stroke=False,stroke_width=5,stroke_color=(100,100,100),rounded=True,roundness=2,hollow=False,background=True,text="戻る",fontsize=50,text_offset_y=-10,text_offset_x=50)
@@ -76,8 +84,40 @@ children_text.roundness = 10
 children_text.rounded = True
 hoverd = False
 Warikan = True
-frames.append(banana_frame)
+#frames.append(banana_frame)
 
+def update_screen():
+    surf = pygame.transform.scale(Gui.screen,(monitor_size))
+    Gui.display.blit(surf,(0,0))
+    pygame.display.update()
+
+def setup():
+    #エクセルファイルからいろいろなものを読み込む
+    X_OFFSET = 500
+    Y_OFFSET = 500
+    Gui.screen.fill((255,255,255))
+    create_center_text(DEFAULT_FONT,100,(64,224,208),MONITOR_MIDDLE[0],MONITOR_MIDDLE[1],"セットアップをしましょう")
+    update_screen()   
+    time.sleep(2)
+    Gui.screen.fill((255,255,255))
+    create_center_text(DEFAULT_FONT,80,(64,224,208),MONITOR_MIDDLE[0],MONITOR_MIDDLE[1],"料理の乗っているファイルを選択してください")
+    update_screen()  
+    menu_file = filedialog.askopenfilename(title="エクセルファイルを選択")
+    menu_file = readexcel.read_menu(menu_file)
+    """
+    ・理想のフレーム画像の大きさは375x300でそれに大きさを合わせるのはパフォーマンスを下げるからしていない
+    ・理想のふるの大きさの画像の大きさは1096x559でそれに大きさを合わせるのはパフォーマンスを下げるからしていない
+    """
+    for i in range(0,menu_file[1]):
+        #print(f"price:{menu_file[0]['値段'][i]} name:{menu_file[0]['品名'][i]} photo:{menu_file[0]['写真'][i]}")
+        frames.append(buy_frame(100 + i * X_OFFSET, 100,(BUTTON_COLORS),str(menu_file[0]["値段"][i]),str(menu_file[0]["品名"][i]),str(menu_file[0]["写真"][i],str(menu_file[0]["フルサイズ写真"][i]))))
+    Gui.screen.fill((255,255,255))
+    create_center_text(DEFAULT_FONT,80,(64,224,208),MONITOR_MIDDLE[0],MONITOR_MIDDLE[1],"単品の値段の乗っているファイルを選択してください")
+    update_screen()  
+    #foods_file = filedialog.askopenfilename(title="エクセルファイルを選択")
+    #print(readexcel.read_foods(foods_file))
+    
+setup()
 
 def Banana_detection_Whole_table():
     global img,diff_global, whole_table_banana
@@ -139,7 +179,7 @@ class person:
 
         print(f"local: {diff_local}, whole: {diff_invert}")
 
-        if diff_local < 0 :
+        if diff_local < 0 and self.current_frame_local_food[0] > 0:
             if diff_invert > 0:
                 self.counted_food[0] += diff_local 
         elif diff_local > 0 :
@@ -264,16 +304,18 @@ def draw():
         Warikan_button.draw()
     if current_stage == 1:
         Gui.screen.fill((248, 248, 255))
-        banana_frame.draw()
+        for item in frames:
+            item.draw()
         if Warikan == True:
             warikan_look.draw()
     if current_stage == 2:
         Gui.screen.fill((248, 248, 255))
-        if buying == "バナナの皿":
-            Gui.screen.blit(banana_big,(412,100))
-            create_center_text(DEFAULT_FONT,100,(0,0,0),MONITOR_MIDDLE[0],750,buying)
-            create_center_text(DEFAULT_FONT,50,(0,0,0),MONITOR_MIDDLE[0],850,"500円")
-            banana_buy.draw()
+        for item in frames:
+            if buying == item.name:
+                Gui.screen.blit(item.fullsize_photo,(412,100))
+                create_center_text(DEFAULT_FONT,100,(0,0,0),MONITOR_MIDDLE[0],750,buying)
+                create_center_text(DEFAULT_FONT,50,(0,0,0),MONITOR_MIDDLE[0],850,item.price)
+                banana_buy.draw()
         back_button.draw()
     if current_stage == 3:
         Gui.screen.blit(BACKGROUND_IMG,(0,0))
@@ -370,6 +412,7 @@ def pygame_background_functionts(testsubject=None,value_x=None,value_y=None):
                 with open('test.txt', 'w') as f:
                     #f.write(f'Y is: {testsubject.y} X is: {testsubject.x} width is: {testsubject.w} height is: {testsubject.h}')
                     f.write(f'Y is: {value_y} X is: {value_x} ')
+            root.destroy()
             pygame.quit()
             sys.exit()
         if event.type == KEYDOWN:
