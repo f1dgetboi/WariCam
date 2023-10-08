@@ -14,7 +14,7 @@ def create_window(width, height,background_colour,caption):
     WIDTH = width
     HEIGHT = height
     window_colour = background_colour
-    display = pygame.display.set_mode((WIDTH, HEIGHT), pygame.HWSURFACE | pygame.DOUBLEBUF |pygame.FULLSCREEN)
+    display = pygame.display.set_mode((WIDTH, HEIGHT), pygame.HWSURFACE | pygame.DOUBLEBUF )
     screen = pygame.Surface((width, height))
     pygame.display.set_caption(str(caption))
     #screen.fill(background_colour)
@@ -158,8 +158,7 @@ class Button(GuiObject):
             self.clicked = False
             self.changed = False
         return value
-
-            
+   
                             
 class TextBox():
     def __init__(self,w,h,x,y,color,text,fontsize,text_offset_x=0,text_offset_y=0,visible=True,stroke=False,stroke_width=5,stroke_color=(255,255,255),rounded=False,roundness=3,hollow=False):
@@ -199,7 +198,7 @@ class TextBox():
                 create_text(DEFAULT_FONT,self.fontsize,(0,0,0),self.x + self.text_offset_x,self.y + self.text_offset_y,self.text)
 
 class buy_frame():
-    def __init__(self,x,y,color,price,name,photo):
+    def __init__(self,x,y,color,price,name,photo,fullsize_photo):
         self.name= name
         self.width = 400
         self.height = 400
@@ -209,6 +208,8 @@ class buy_frame():
         self.price = price
         self.name = name
         self.photo = self.texture = pygame.image.load(photo)
+        if fullsize_photo:
+            self.fullsize_photo = pygame.image.load(fullsize_photo)    
         self.background = Button(self.width,self.height,self.x,self.y,self.color)
         self.background.hoverd_color = self.color
     def draw(self):
